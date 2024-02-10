@@ -5,11 +5,10 @@ from MyProject.ecomerce.models import Product, Comments
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False)
-
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
+        fields = ('id', 'username', 'email')
+        read_only_field = ('username',)
 
     def create(self, validated_data):
         return User.objects.create_user(request_data=validated_data)
