@@ -8,6 +8,6 @@ router = DefaultRouter()
 router.register(r"product", ProductViewsSet)
 router.register(r"user", UserViewsSet)
 
-urlpatterns = [
+urlpatterns = {
     path('', include(router.urls))
-]
+}
