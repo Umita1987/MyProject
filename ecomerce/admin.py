@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from MyProject.ecomerce.models import Product, Comments
+from .models import Product, Comments
 
 admin.site.register(Product)
 # Register your models here.

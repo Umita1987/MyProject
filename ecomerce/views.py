@@ -18,11 +18,10 @@ class ProductViewsSet(viewsets.ModelViewSet):
     filterset_fields = ['category', "in_stock", "rating", "price"]
 
 
-class UserViewSet(mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  viewsets.GenericViewSet):
-
+class UserViewsSet(mixins.CreateModelMixin,
+                   mixins.RetrieveModelMixin,
+                   mixins.UpdateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsUserOrReadOnly,)
@@ -30,7 +29,7 @@ class UserViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         self.serializer_class = UserSerializer
         self.permission_classes = (AllowAny,)
-        return super(UserViewSet, self).create(request, *args, **kwargs)
+        return super(UserViewsSet, self).create(request, *args, **kwargs)
 
 
 class CommentsViewsSet(viewsets.ModelViewSet):

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from MyProject.ecomerce.models import Product, Comments
+from .models import Product, Comments
 
 
 class UserSerializer(serializers.ModelSerializer):
