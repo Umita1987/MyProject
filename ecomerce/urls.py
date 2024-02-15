@@ -1,13 +1,18 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import ProductViewsSet, UserViewsSet
+
+from .views import ProductViewsSet, CommentsViewsSet, RegisterViewsSet, LogoutView
 
 router = DefaultRouter()
 
 router.register(r"product", ProductViewsSet)
-router.register(r"user", UserViewsSet)
+router.register(r'comments', CommentsViewsSet)
+router.register('register', RegisterViewsSet)
 
-urlpatterns = {
-    path('', include(router.urls))
-}
+
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('logout/', LogoutView.as_view(), name='auth_logout')
+]
