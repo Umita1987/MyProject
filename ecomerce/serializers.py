@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import Product, Comments
+from .models import Product, Comments, Review
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -101,3 +101,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    product = ProductSerializer
+    class Meta:
+        model = Review
+        fields = ('product', 'rating')

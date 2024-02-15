@@ -9,9 +9,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Product, Comments
+from .models import Product, Comments, Review
 from .paginations import PaginationList
-from .serializers import ProductSerializer, CommentsSerializer, RegisterSerializer, MyTokenObtainPairSerializer
+from .serializers import ProductSerializer, CommentsSerializer, RegisterSerializer, MyTokenObtainPairSerializer, \
+    ReviewSerializer
 
 
 class ProductViewsSet(viewsets.ModelViewSet):
@@ -60,3 +61,8 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class ReviewViewsSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = ReviewSerializer

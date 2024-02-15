@@ -1,6 +1,6 @@
-from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import Avg
 
 
 # Create your models here.
@@ -14,6 +14,8 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+
 class Comments(models.Model):
     title = models.CharField(max_length=50)
     text = models.TextField()
@@ -38,3 +40,20 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    rating = models.IntegerField()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        reviews = Review.objects.filter(product=self.product)
+        average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+        self.product.average_rating = average_rating
+        self.product.save()
+
+
+
+
+
