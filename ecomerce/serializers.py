@@ -39,7 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'title', 'category', 'quantity', 'price', 'in_stock']
+        fields = ['id', 'title', 'category', 'quantity', 'price', 'in_stock', 'average_rating']
 
     def create(self, validated_data):
         return Product.objects.create(**validated_data)

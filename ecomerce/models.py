@@ -11,9 +11,16 @@ class Product(models.Model):
     quantity = models.IntegerField()
     price = models.IntegerField()
     in_stock = models.BooleanField()
+    average_rating = models.FloatField(default=0.0, editable=False)
 
     def __str__(self):
         return self.title
+
+    def update_average_rating(self):
+        reviews = self.review_set.all()
+        average_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+        self.average_rating = average_rating
+        self.save()
 
 
 class Comments(models.Model):
@@ -48,10 +55,7 @@ class Review(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        reviews = Review.objects.filter(product=self.product)
-        average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
-        self.product.average_rating = average_rating
-        self.product.save()
+        self.product.update_average_rating()
 
 
 
