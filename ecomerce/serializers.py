@@ -39,7 +39,9 @@ class UserSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'title', 'category', 'quantity', 'price', 'in_stock']
+        fields = ['_id', 'index', 'url', 'name', 'sku', 'selling_price', 'currency', 'availability', 'color', 'category',
+                  'source_website', 'breadcrumbs', 'description', 'brand', 'images', 'country', 'language',
+                  'average_rating', 'reviews_count', 'crawled_at']
 
     def create(self, validated_data):
         return Product.objects.create(**validated_data)
@@ -105,9 +107,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     product = ProductSerializer
+
     class Meta:
         model = Review
         fields = ('product', 'rating')
+
 
 class DeleteDocumentSerializer(serializers.Serializer):
     document_id = serializers.CharField()

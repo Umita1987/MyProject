@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Comments, Review
+from .models import Comments, Review, Product
 from .paginations import PaginationList
 from .premissions import IsOwnerOrReadOnly
 from .serializers import ProductSerializer, CommentsSerializer, RegisterSerializer, MyTokenObtainPairSerializer, \
@@ -127,3 +127,14 @@ class DeleteDocumentView(APIView):
                 return Response({'error': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProductDeleteView(generics.DestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(print("delete Product"))
+

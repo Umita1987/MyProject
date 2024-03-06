@@ -6,15 +6,32 @@ from django.db.models import Avg
 # Create your models here.
 
 class Product(models.Model):
-    title = models.CharField(max_length=50)
-    category = models.CharField(max_length=100)
-    quantity = models.IntegerField()
-    price = models.IntegerField()
-    in_stock = models.BooleanField()
-    average_rating = models.FloatField(default=0.0, editable=False)
+    _id = models.TextField()
+    index = models.IntegerField()
+    url = models.TextField()
+    name = models.TextField()
+    sku = models.TextField()
+    selling_price = models.IntegerField()
+    currency = models.TextField()
+    availability = models.BooleanField()
+    color = models.TextField()
+    category = models.TextField()
+    source = models.TextField()
+    source_website = models.TextField()
+    breadcrumbs = models.TextField()
+    description = models.TextField()
+    brand = models.TextField()
+    images = models.TextField()
+    country = models.TextField()
+    language = models.TextField()
+    average_rating = models.FloatField()
+    reviews_count = models.IntegerField()
+    crawled_at = models.TextField()
+
+
 
     def __str__(self):
-        return self.title
+        return self.name
 
     def update_average_rating(self):
         reviews = self.review_set.all()
