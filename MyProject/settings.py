@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import pymongo
+client = pymongo.MongoClient("mongodb://localhost:27017")
+
+# Подключаемся к БД
+db = client.clothes
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,7 +43,6 @@ INSTALLED_APPS = [
     'ecomerce',
     'rest_framework',
     'django_filters',
-
 ]
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
