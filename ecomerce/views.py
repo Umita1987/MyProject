@@ -138,3 +138,8 @@ class ProductDeleteView(generics.DestroyAPIView):
         instance.delete()
         return Response(print("delete Product"))
 
+
+class ProductUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    partial = True
