@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.db.migrations import serializer
-from rest_framework import serializers, request
+from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -33,7 +32,6 @@ class UserSerializer(serializers.ModelSerializer):
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
         instance = super().update(instance, validated_data)
-        serializer.errors()
         instance.save()
         return instance
 
@@ -41,9 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['_id','index', 'url', 'name', 'sku', 'selling_price', "currency", "availability", "color",
-                  "category", "source_website", "breadcrumbs", "description", "brand", "images", "country", "language",
-                  "average_rating", "reviews_count", "crawled_at"]
+        fields = ['id', 'title', 'category', 'quantity', 'price', 'in_stock', 'average_rating']
 
     def create(self, validated_data):
         return Product.objects.create(**validated_data)
@@ -55,7 +51,6 @@ class ProductSerializer(serializers.ModelSerializer):
         instance.price = validated_data.get('price', instance.price)
         instance.available = validated_data.get('available', instance.rating)
         instance = super().update(instance, validated_data)
-        serializer.errors()
         instance.save()
         return instance
 
@@ -69,18 +64,6 @@ class CommentsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         return Comments.objects.create(owner=user, **validated_data)
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.product = validated_data.get('product', instance.product)
-        instance.text = validated_data.get('text', instance.text)
-        instance.owner = validated_data.get('owner', instance.owner)
-        instance.product = validated_data.get('rating', instance.rating)
-
-        instance = super().update(instance, validated_data)
-        serializer.errors()
-        instance.save(owner=request.user)
-        return instance
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -122,11 +105,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     product = ProductSerializer
-
     class Meta:
         model = Review
         fields = ('product', 'rating')
-
-
-class DeleteDocumentSerializer(serializers.Serializer):
-    document_id = serializers.CharField()

@@ -6,27 +6,21 @@ from django.db.models import Avg
 # Create your models here.
 
 class Product(models.Model):
-    _id = models.TextField()
-    index = models.IntegerField(primary_key=True)
-    url = models.TextField(max_length=100)
-    name = models.CharField(max_length=100)
-    sku = models.TextField(max_length=100)
-    selling_price = models.FloatField()
-    original_price = models.FloatField()
-    currency = models.TextField()
-    availability = models.CharField(max_length=50)
-    color = models.TextField()
+    title = models.CharField(max_length=50)
     category = models.CharField(max_length=100)
-    source_website = models.TextField()
-    breadcrumbs = models.TextField()
-    description = models.TextField()
-    brand = models.TextField()
-    images = models.TextField()
-    country = models.TextField()
-    language = models.TextField()
-    average_rating = models.FloatField()
-    reviews_count = models.IntegerField()
-    crawled_at = models.TextField()
+    quantity = models.IntegerField()
+    price = models.IntegerField()
+    in_stock = models.BooleanField()
+    average_rating = models.FloatField(default=0.0, editable=False)
+
+    def __str__(self):
+        return self.title
+
+    def update_average_rating(self):
+        reviews = self.review_set.all()
+        average_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+        self.average_rating = average_rating
+        self.save()
 
 
 class Comments(models.Model):
@@ -62,3 +56,8 @@ class Review(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.product.update_average_rating()
+
+
+
+
+
