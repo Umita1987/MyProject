@@ -44,25 +44,58 @@ class ProductViewsSet(viewsets.ViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @staticmethod
-    def delete(request, pk=None):
+    def retrieve(self, request, pk=None):
         client = pymongo.MongoClient("mongodb://localhost:27017/")
         db = client["clothes"]
         products_collection = db["brands"]
 
-        # Ensure that the pk is a valid ObjectId
         try:
             object_id = ObjectId(pk)
+            product = products_collection.find_one({"_id": object_id})
+            if product:
+                serializer = ProductSerializer(product)
+                return Response(serializer.data)
+            else:
+                return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response("Invalid ObjectId provided", status=status.HTTP_400_BAD_REQUEST)
 
-        # Delete the product from MongoDB based on the provided primary key (pk)
-        result = products_collection.delete_one({"_id": object_id})
+    def update(self, request, pk=None):
+        client = pymongo.MongoClient("mongodb://localhost:27017/")
+        db = client["clothes"]
+        products_collection = db["brands"]
 
-        if result.deleted_count > 0:
-            return Response("Product deleted successfully", status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response("Product not found or failed to delete", status=status.HTTP_404_NOT_FOUND)
+        try:
+            object_id = ObjectId(pk)
+            serializer = ProductSerializer(data=request.data)
+            if serializer.is_valid():
+                product_data = serializer.validated_data
+                result = products_collection.update_one({"_id": object_id}, {"$set": product_data})
+                if result.modified_count > 0:
+                    updated_product = products_collection.find_one({"_id": object_id})
+                    serializer = ProductSerializer(updated_product)
+                    return Response(serializer.data)
+                else:
+                    return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response("Invalid ObjectId provided", status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None):
+        client = pymongo.MongoClient("mongodb://localhost:27017/")
+        db = client["clothes"]
+        products_collection = db["brands"]
+
+        try:
+            object_id = ObjectId(pk)
+            result = products_collection.delete_one({"_id": object_id})
+            if result.deleted_count > 0:
+                return Response("Product deleted successfully", status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response("Invalid ObjectId provided", status=status.HTTP_400_BAD_REQUEST)
 
 
 class MyObtainTokenPairView(TokenObtainPairView):
@@ -189,7 +222,7 @@ class ProductAPIView(APIView):
             return Response("Added Successfully", status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, id):
+    def put(self, request, _id):
         try:
             product = Product.objects.get(_id=id)
             serializer = ProductSerializer(product, data=request.data)
