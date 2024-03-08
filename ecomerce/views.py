@@ -1,10 +1,9 @@
 from typing import Type
 
-from bson import ObjectId
-from pymongo import MongoClient
-from rest_framework.decorators import api_view
 import pymongo
+from bson import ObjectId
 from django.contrib.auth.models import User
+from pymongo import MongoClient
 from rest_framework import viewsets, status, generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -48,19 +47,22 @@ class ProductViewsSet(viewsets.ViewSet):
     @staticmethod
     def delete(request, pk=None):
         client = pymongo.MongoClient("mongodb://localhost:27017/")
-        db = client["ecommerce_db"]
-        products_collection = db["products"]
+        db = client["clothes"]
+        products_collection = db["brands"]
+
+        # Ensure that the pk is a valid ObjectId
+        try:
+            object_id = ObjectId(pk)
+        except Exception as e:
+            return Response("Invalid ObjectId provided", status=status.HTTP_400_BAD_REQUEST)
 
         # Delete the product from MongoDB based on the provided primary key (pk)
-        result = products_collection.delete_one({"_id": ObjectId(pk)})
+        result = products_collection.delete_one({"_id": object_id})
 
         if result.deleted_count > 0:
             return Response("Product deleted successfully", status=status.HTTP_204_NO_CONTENT)
         else:
             return Response("Product not found or failed to delete", status=status.HTTP_404_NOT_FOUND)
-
-
-
 
 
 class MyObtainTokenPairView(TokenObtainPairView):
@@ -107,14 +109,13 @@ class DeleteCommentsView(generics.DestroyAPIView):
     permission_classes = (IsOwnerOrReadOnly,)
 
 
-
 class DeleteDocumentView(APIView):
-   def post(self, request):
+    def post(self, request):
         serializer = DeleteDocumentSerializer(data=request.data)
         if serializer.is_valid():
             document_id = serializer.validated_data['document_id']
 
-            #Connect to your MongoDB
+            # Connect to your MongoDB
             client = MongoClient('localhost', 27017)
             db = client['clothes']
             collection = db['brands']
@@ -122,7 +123,7 @@ class DeleteDocumentView(APIView):
             # Delete the document
             result = collection.delete_one({'_id': document_id})
             if result.deleted_count == 1:
-               return Response({'message': 'Document deleted successfully'}, status=status.HTTP_200_OK)
+                return Response({'message': 'Document deleted successfully'}, status=status.HTTP_200_OK)
             else:
                 return Response({'error': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -143,3 +144,66 @@ class ProductUpdateView(generics.RetrieveUpdateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     partial = True
+
+
+class CustomProductViewSet(viewsets.ViewSet):
+    def retrieve(self, request, pk=None):
+        client = pymongo.MongoClient("mongodb://localhost:27017/")
+        db = client["clothes"]
+        products_collection = db["brands"]
+
+        # Retrieve the product details based on the provided primary key (pk)
+        product_data = products_collection.find_one({"_id": ObjectId(pk)})
+
+        if product_data:
+            serializer = ProductSerializer(product_data)  # Serialize the product data
+            return Response(serializer.data)
+        else:
+            return Response("Product not found", status=404)
+
+
+class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+class ProductAPIView(APIView):
+    @staticmethod
+    def get(request, _id=None):
+        if _id is not None:
+            try:
+                product = Product.objects.get(_id=id)
+                serializer = ProductSerializer(product)
+                return Response(serializer.data)
+            except Product.DoesNotExist:
+                return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
+        else:
+            products = Product.objects.all()
+            serializer = ProductSerializer(products, many=True)
+            return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response("Added Successfully", status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, id):
+        try:
+            product = Product.objects.get(_id=id)
+            serializer = ProductSerializer(product, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response("Updated Successfully")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Product.DoesNotExist:
+            return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
+
+    def delete(self, request, _id):
+        try:
+            product = Product.objects.get(_id=id)
+            product.delete()
+            return Response("Deleted Successfully", status=status.HTTP_204_NO_CONTENT)
+        except Product.DoesNotExist:
+            return Response("Product not found", status=status.HTTP_404_NOT_FOUND)

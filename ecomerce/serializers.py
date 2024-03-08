@@ -43,18 +43,6 @@ class ProductSerializer(serializers.ModelSerializer):
                   'source_website', 'breadcrumbs', 'description', 'brand', 'images', 'country', 'language',
                   'average_rating', 'reviews_count', 'crawled_at']
 
-    def create(self, validated_data):
-        return Product.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.category = validated_data.get('category', instance.category)
-        instance.quantity = validated_data.get('quantity', instance.quantity)
-        instance.price = validated_data.get('price', instance.price)
-        instance.available = validated_data.get('available', instance.rating)
-        instance = super().update(instance, validated_data)
-        instance.save()
-        return instance
 
 
 class CommentsSerializer(serializers.ModelSerializer):
@@ -114,4 +102,4 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class DeleteDocumentSerializer(serializers.Serializer):
-    document_id = serializers.CharField()
+    id = serializers.CharField()
