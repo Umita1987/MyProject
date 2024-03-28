@@ -1,12 +1,12 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models
 from django.db.models import Avg
+from djongo import models
 
 
 # Create your models here.
 
 class Product(models.Model):
-    _id = models.TextField()
+    _id = models.CharField(primary_key=True, max_length=255)
     index = models.IntegerField()
     url = models.TextField()
     name = models.TextField()
@@ -27,8 +27,6 @@ class Product(models.Model):
     average_rating = models.FloatField()
     reviews_count = models.IntegerField()
     crawled_at = models.TextField()
-
-
 
     def __str__(self):
         return self.name
@@ -74,7 +72,11 @@ class Review(models.Model):
         super().save(*args, **kwargs)
         self.product.update_average_rating()
 
-
-
-
-
+class Purchases(models.Model):
+    _id = models.CharField(primary_key=True, max_length=255)
+    customer_id = models.IntegerField()
+    product_count = models.IntegerField()
+    product_price = models.IntegerField()
+    date = models.DateTimeField()
+    product_index = models.IntegerField()
+    currency = models.TextField()

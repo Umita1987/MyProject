@@ -1,5 +1,6 @@
 from typing import Type
 
+import pandas as pd
 import pymongo
 from bson import ObjectId
 from django.contrib.auth.models import User
@@ -10,22 +11,24 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
-
+from rest_pandas import PandasSimpleView
+from rest_framework.viewsets import  GenericViewSet
 from .models import Comments, Review, Product
 from .paginations import PaginationList
 from .premissions import IsOwnerOrReadOnly
 from .serializers import ProductSerializer, CommentsSerializer, RegisterSerializer, MyTokenObtainPairSerializer, \
-    ReviewSerializer, DeleteDocumentSerializer
+    ReviewSerializer, DeleteDocumentSerializer, PurchasesSerializer
 
 
 class ProductViewsSet(viewsets.ViewSet):
     pagination_class = PaginationList
 
-    def list(self, request):
+    @staticmethod
+    def list(request):
         client = pymongo.MongoClient("mongodb://localhost:27017")
         db = client["clothes"]
         products_collection = db["brands"]
-        products_data = products_collection.find()
+        products_data = list(products_collection.find())
         serializer = ProductSerializer(products_data, many=True)
         return Response(serializer.data)
 
@@ -44,7 +47,8 @@ class ProductViewsSet(viewsets.ViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request, pk=None):
+    @staticmethod
+    def retrieve(request, pk=None):
         client = pymongo.MongoClient("mongodb://localhost:27017/")
         db = client["clothes"]
         products_collection = db["brands"]
@@ -60,7 +64,8 @@ class ProductViewsSet(viewsets.ViewSet):
         except Exception as e:
             return Response("Invalid ObjectId provided", status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, pk=None):
+    @staticmethod
+    def update(request, pk=None):
         client = pymongo.MongoClient("mongodb://localhost:27017/")
         db = client["clothes"]
         products_collection = db["brands"]
@@ -68,7 +73,7 @@ class ProductViewsSet(viewsets.ViewSet):
         try:
             object_id = ObjectId(pk)
             serializer = ProductSerializer(data=request.data)
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 product_data = serializer.validated_data
                 result = products_collection.update_one({"_id": object_id}, {"$set": product_data})
                 if result.modified_count > 0:
@@ -119,7 +124,8 @@ class RegisterViewsSet(viewsets.ModelViewSet):
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         try:
             refresh_token = request.data["refresh_token"]
             token = RefreshToken(refresh_token)
@@ -143,7 +149,8 @@ class DeleteCommentsView(generics.DestroyAPIView):
 
 
 class DeleteDocumentView(APIView):
-    def post(self, request):
+    @staticmethod
+    def post(request):
         serializer = DeleteDocumentSerializer(data=request.data)
         if serializer.is_valid():
             document_id = serializer.validated_data['document_id']
@@ -180,7 +187,8 @@ class ProductUpdateView(generics.RetrieveUpdateAPIView):
 
 
 class CustomProductViewSet(viewsets.ViewSet):
-    def retrieve(self, request, pk=None):
+    @staticmethod
+    def retrieve(request, pk=None):
         client = pymongo.MongoClient("mongodb://localhost:27017/")
         db = client["clothes"]
         products_collection = db["brands"]
@@ -205,7 +213,7 @@ class ProductAPIView(APIView):
     def get(request, _id=None):
         if _id is not None:
             try:
-                product = Product.objects.get(_id=id)
+                product = Product.objects.get(_id=ObjectId(_id))
                 serializer = ProductSerializer(product)
                 return Response(serializer.data)
             except Product.DoesNotExist:
@@ -215,16 +223,20 @@ class ProductAPIView(APIView):
             serializer = ProductSerializer(products, many=True)
             return Response(serializer.data)
 
-    def post(self, request):
+    @staticmethod
+    def post(request):
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response("Added Successfully", status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, _id):
+    @staticmethod
+    def put(request, _id=None):
+        if _id is None:
+            return Response("Missing product ID", status=status.HTTP_400_BAD_REQUEST)
         try:
-            product = Product.objects.get(_id=id)
+            product = Product.objects.get(_id=ObjectId(_id))
             serializer = ProductSerializer(product, data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -233,10 +245,24 @@ class ProductAPIView(APIView):
         except Product.DoesNotExist:
             return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
 
-    def delete(self, request, _id):
+    @staticmethod
+    def delete(request, _id):
         try:
-            product = Product.objects.get(_id=id)
+            product = Product.objects.get(_id=ObjectId(_id))
             product.delete()
             return Response("Deleted Successfully", status=status.HTTP_204_NO_CONTENT)
         except Product.DoesNotExist:
             return Response("Product not found", status=status.HTTP_404_NOT_FOUND)
+
+
+class PurchasesSeriesView(PandasSimpleView, GenericViewSet):
+
+    def get_data(self, request, *args, **kwargs):
+        client = pymongo.MongoClient("mongodb://localhost:27017")
+        db = client["clothes"]
+        purchases_collection = db["purchases"]
+        purchases_data = list(purchases_collection.find())
+        df = pd.DataFrame(purchases_data)
+        serializer = PurchasesSerializer(df, many=True)
+        return Response(serializer.data)
+
